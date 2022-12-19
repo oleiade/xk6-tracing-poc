@@ -1,8 +1,7 @@
+// Package tracing implements a k6 JS module for instrumenting k6 scripts with tracing context information.
 package tracing
 
 import (
-	"fmt"
-
 	"github.com/dop251/goja"
 	"go.k6.io/k6/js/modules"
 )
@@ -34,13 +33,12 @@ func New() *RootModule {
 // NewModuleInstance implements the modules.Module interface and returns
 // a new instance for each VU.
 func (*RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
-	vu.Runtime().SetFieldNameMapper(goja.TagFieldNameMapper("json", true))
+	vu.Runtime().SetFieldNameMapper(goja.TagFieldNameMapper("js", true))
 
 	return &ModuleInstance{
 		vu: vu,
 		Tracing: &Tracing{
-			vu:   vu,
-			HTTP: &HTTP{},
+			vu: vu,
 		},
 	}
 }
@@ -51,6 +49,5 @@ func (mi *ModuleInstance) Exports() modules.Exports {
 	return modules.Exports{Named: map[string]interface{}{
 		"tracing":        mi.Tracing,
 		"instrumentHTTP": mi.Tracing.InstrumentHTTP,
-		"get":            func(arg string) { fmt.Println("hello: " + arg) },
 	}}
 }

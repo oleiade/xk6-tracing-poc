@@ -1,29 +1,34 @@
 import http from "k6/http";
+import { check } from "k6";
 import tracing from "k6/x/tracing";
+
+const options = {
+  vus: 1,
+  iterations: 1,
+};
 
 tracing.instrumentHTTP({
   sampling: 12,
   propagator: "w3c",
-  baggage: { "X-My-baggage": "something" },
+  baggage: { "X-My-baggage": "some other thing" },
 });
 
-// let client = new tracing.Client();
-
 export default () => {
-  tracing.get("coucou");
-  global.get("https://test-api.k6.io");
-  console.log("http: ", JSON.stringify(http));
+  const params = {
+    headers: {
+      "X-My-Header": "something",
+    },
+  };
 
-  //   console.log(`http from the script: ${JSON.stringify(http)}`);
+  let res = http.get("http://localhost:3434/latency/50ms", params);
+  check(res, {
+    "status is 200": (r) => r.status === 200,
+  });
 
-  //   console.log(intrumentedHTTPGet("https://test-api.k6.io", {}));
-  //   console.log(http);
-  //   console.log(Object.keys(http));
-  //   http.get = function (url, params) {
-  //     console.log("GETTING");
-  //   };
-  //   http.get("https://test-api.k6.io", {});
-  //   console.log(http.get("https://test-api.k6.io", {}));
-  //   let someurl = "https://test.k6.io";
-  //   http.get(someurl); // this will be instrumented
+  let data = { name: "Bert" };
+
+  res = http.post("http://httpbin.org/post", JSON.stringify(data), params);
+  check(res, {
+    "status is 200": (r) => r.status === 200,
+  });
 };
