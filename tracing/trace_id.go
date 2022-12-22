@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	k6Prefix    = 0o756 // Being 075 the ASCII code for 'K' :)
-	k6CloudCode = 12    // To ingest and process the related spans in k6 Cloud.
-	k6LocalCode = 33    // To not ingest and process the related spans, b/c they are part of a non-cloud run.
+	k6Prefix               = 0o756 // Being 075 the ASCII code for 'K' :)
+	k6CloudCode            = 12    // To ingest and process the related spans in k6 Cloud.
+	k6LocalCode            = 33    // To not ingest and process the related spans, b/c they are part of a non-cloud run.
+	metadataTraceIDKeyName = "trace_id"
 )
 
 // Tracer is the interface that wraps the TraceID method.
@@ -52,14 +53,15 @@ func (t *TraceID) IsValid() bool {
 	return t.Prefix == k6Prefix && (t.Code == k6CloudCode || t.Code == k6LocalCode)
 }
 
-// IsValidCloud returns true if the TraceID is valid and is meant to be used in k6 Cloud, false otherwise.
-func (t *TraceID) IsValidCloud() bool {
-	return t.Prefix == k6Prefix && t.Code == k6CloudCode
-}
-
 // Encode encodes the TraceID into a hex string and a byte slice.
 func (t *TraceID) Encode() (string, []byte, error) {
-	if !t.IsValid() {
+	var (
+		isk6Prefix    = t.Prefix == k6Prefix
+		isk6CloudCode = t.Code == k6CloudCode
+		isk6LocalCode = t.Code == k6LocalCode
+	)
+
+	if !isk6Prefix && (!isk6CloudCode || !isk6LocalCode) {
 		return "", nil, fmt.Errorf("failed to encode traceID: %v", t)
 	}
 

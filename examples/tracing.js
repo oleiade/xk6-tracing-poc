@@ -2,7 +2,7 @@ import http from "k6/http";
 import { check } from "k6";
 import tracing from "k6/x/tracing";
 
-const options = {
+export const options = {
   vus: 1,
   iterations: 1,
 };
@@ -20,7 +20,7 @@ export default () => {
     },
   };
 
-  let res = http.get("http://localhost:3434/latency/50ms", params);
+  let res = http.get("http://httpbin.org/get", params);
   check(res, {
     "status is 200": (r) => r.status === 200,
   });
